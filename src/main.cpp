@@ -48,6 +48,17 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  // set input attributes
+  int pagePadding = 50;
+  int fontSize = 12;
+  int h1fontSize = 48;
+  int h2fontSize = 36;
+  int h3fontSize = 28;
+  int h4fontSize = 24;
+  int h5fontSize = 20;
+  int h6fontSize = 16;
+  float linePadding = 3;
+
   // set attributes
   HPDF_SetCompressionMode(pdf, HPDF_COMP_ALL);
   HPDF_SetPageMode(pdf, HPDF_PAGE_MODE_USE_OUTLINE);
@@ -63,19 +74,87 @@ int main(int argc, char **argv) {
 
   // load font
   HPDF_Font font = HPDF_GetFont(pdf, "Helvetica", NULL);
-  HPDF_Page_SetFontAndSize(page, font, 12);
+  HPDF_Page_SetFontAndSize(page, font, fontSize);
 
   // convert md to pdf
+  float cPosY = height - pagePadding;
+  float cPosX = pagePadding;
+
   std::ifstream md(mdFile);
 
   HPDF_Page_BeginText(page);
 
-  HPDF_Page_MoveTextPos(page, 50, height - 50);
-  std::string line;
+  int chr;
   std::string content;
-  while (getline(md, line)) {
-    content += line + "\n";
-  }
+  do {
+    chr = md.get();
+
+    switch (chr) {
+    case '#':
+      if (md.peek() == '#') {
+        md.get();
+        if (md.peek() == '#') {
+          md.get();
+          if (md.peek() == '#') {
+            md.get();
+            if (md.peek() == '#') {
+              md.get();
+              if (md.peek() == '#') {
+                md.get();
+                cPosY -= h6fontSize - HPDF_Page_GetCurrentFontSize(page);
+                HPDF_Page_SetFontAndSize(page, font, h6fontSize);
+                cPosX -= h6fontSize / 2.0;
+              } else {
+                cPosY -= h5fontSize - HPDF_Page_GetCurrentFontSize(page);
+                HPDF_Page_SetFontAndSize(page, font, h5fontSize);
+                cPosX -= h5fontSize / 2.0;
+              }
+            } else {
+              cPosY -= h4fontSize - HPDF_Page_GetCurrentFontSize(page);
+              HPDF_Page_SetFontAndSize(page, font, h4fontSize);
+              cPosX -= h4fontSize / 2.0;
+            }
+          } else {
+            cPosY -= h3fontSize - HPDF_Page_GetCurrentFontSize(page);
+            HPDF_Page_SetFontAndSize(page, font, h3fontSize);
+            cPosX -= h3fontSize / 2.0;
+          }
+        } else {
+          cPosY -= h2fontSize - HPDF_Page_GetCurrentFontSize(page);
+          HPDF_Page_SetFontAndSize(page, font, h2fontSize);
+          cPosX -= h2fontSize / 2.0;
+        }
+      } else {
+        cPosY -= h1fontSize - HPDF_Page_GetCurrentFontSize(page);
+        HPDF_Page_SetFontAndSize(page, font, h1fontSize);
+        cPosX -= h1fontSize / 2.0;
+      }
+      break;
+
+    case ' ':
+      content += chr;
+      HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
+      cPosX += HPDF_Page_TextWidth(page, content.c_str());
+      content = "";
+      break;
+
+    case '\n':
+      while (md.peek() == '\n')
+        md.get();
+      HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
+      cPosY -= linePadding + HPDF_Page_GetCurrentFontSize(page);
+      HPDF_Page_SetFontAndSize(page, font, fontSize);
+      content = "";
+      cPosX = pagePadding;
+      break;
+
+    default:
+      content += chr;
+      break;
+    }
+
+  } while (chr != EOF);
+
   HPDF_Page_TextRect(page, TEXT_BOX_PADDING, height - TEXT_BOX_PADDING,
                      width - TEXT_BOX_PADDING, TEXT_BOX_PADDING,
                      content.c_str(), HPDF_TALIGN_LEFT, NULL);
