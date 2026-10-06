@@ -208,6 +208,18 @@ int main(int argc, char **argv) {
         cPosX = pagePadding + HPDF_Page_GetCurrentFontSize(page);
         cPosY -= linePadding + HPDF_Page_GetCurrentFontSize(page);
       }
+      if (cPosY - linePadding - HPDF_Page_GetCurrentFontSize(page) <=
+          pagePadding) {
+        HPDF_Page_EndText(page);
+
+        HPDF_Font fontBackup = HPDF_Page_GetCurrentFont(page);
+        HPDF_REAL sizeBackup = HPDF_Page_GetCurrentFontSize(page);
+        page = HPDF_AddPage(pdf);
+        HPDF_Page_SetFontAndSize(page, fontBackup, sizeBackup);
+        cPosY = height - pagePadding;
+
+        HPDF_Page_BeginText(page);
+      }
       content += chr;
       HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
       cPosX += HPDF_Page_TextWidth(page, content.c_str());
@@ -221,6 +233,18 @@ int main(int argc, char **argv) {
       while (md.peek() == '\n')
         md.get();
       cPosY -= linePadding + HPDF_Page_GetCurrentFontSize(page);
+      if (cPosY - linePadding - HPDF_Page_GetCurrentFontSize(page) <=
+          pagePadding) {
+        HPDF_Page_EndText(page);
+
+        HPDF_Font fontBackup = HPDF_Page_GetCurrentFont(page);
+        HPDF_REAL sizeBackup = HPDF_Page_GetCurrentFontSize(page);
+        page = HPDF_AddPage(pdf);
+        HPDF_Page_SetFontAndSize(page, fontBackup, sizeBackup);
+        cPosY = height - pagePadding;
+
+        HPDF_Page_BeginText(page);
+      }
       HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page), fontSize);
       content = "";
       cPosX = pagePadding;
@@ -234,10 +258,6 @@ int main(int argc, char **argv) {
     fullContent += chr;
 
   } while (chr != EOF);
-
-  HPDF_Page_TextRect(page, TEXT_BOX_PADDING, height - TEXT_BOX_PADDING,
-                     width - TEXT_BOX_PADDING, TEXT_BOX_PADDING,
-                     content.c_str(), HPDF_TALIGN_LEFT, NULL);
 
   HPDF_Page_EndText(page);
 
