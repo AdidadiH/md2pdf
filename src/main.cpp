@@ -210,9 +210,11 @@ int main(int argc, char **argv) {
       break;
 
     case '\n': // print content after new line
+      HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
+      if (md.peek() == '\n')
+        cPosY -= HPDF_Page_GetCurrentFontSize(page);
       while (md.peek() == '\n')
         md.get();
-      HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
       cPosY -= linePadding + HPDF_Page_GetCurrentFontSize(page);
       HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page), fontSize);
       content = "";
