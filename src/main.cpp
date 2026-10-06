@@ -73,7 +73,10 @@ int main(int argc, char **argv) {
   HPDF_REAL width = HPDF_Page_GetWidth(page);
 
   // load font
-  HPDF_Font font = HPDF_GetFont(pdf, "Helvetica", NULL);
+  HPDF_Font font = HPDF_GetFont(pdf, "Times-Roman", NULL);
+  HPDF_Font boldFont = HPDF_GetFont(pdf, "Times-Bold", NULL);
+  HPDF_Font italicFont = HPDF_GetFont(pdf, "Times-Italic", NULL);
+  HPDF_Font boldItalicFont = HPDF_GetFont(pdf, "Times-BoldItalic", NULL);
   HPDF_Page_SetFontAndSize(page, font, fontSize);
 
   // convert md to pdf
@@ -86,11 +89,73 @@ int main(int argc, char **argv) {
 
   int chr;
   std::string content;
+  std::string fullContent;
+  bool bold = false;
+  bool italic = false;
   do {
     chr = md.get();
 
     switch (chr) {
-    case '#':
+    case '*': // set bold and italic
+      if (md.peek() == '*') {
+        md.get();
+
+        if (!bold) {
+          bold = true;
+          if (italic)
+            HPDF_Page_SetFontAndSize(page, boldItalicFont,
+                                     HPDF_Page_GetCurrentFontSize(page));
+          else
+            HPDF_Page_SetFontAndSize(page, boldFont,
+                                     HPDF_Page_GetCurrentFontSize(page));
+          HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
+          cPosX += HPDF_Page_TextWidth(page, content.c_str());
+          content = "";
+        } else {
+          HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
+          cPosX += HPDF_Page_TextWidth(page, content.c_str());
+          content = "";
+          bold = false;
+          if (italic)
+            HPDF_Page_SetFontAndSize(page, italicFont,
+                                     HPDF_Page_GetCurrentFontSize(page));
+          else
+            HPDF_Page_SetFontAndSize(page, font,
+                                     HPDF_Page_GetCurrentFontSize(page));
+        }
+      } else {
+        if (!italic) {
+          italic = true;
+          if (bold)
+            HPDF_Page_SetFontAndSize(page, boldItalicFont,
+                                     HPDF_Page_GetCurrentFontSize(page));
+          else
+            HPDF_Page_SetFontAndSize(page, italicFont,
+                                     HPDF_Page_GetCurrentFontSize(page));
+          HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
+          cPosX += HPDF_Page_TextWidth(page, content.c_str());
+          content = "";
+        } else {
+          HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
+          cPosX += HPDF_Page_TextWidth(page, content.c_str());
+          content = "";
+          italic = false;
+          if (bold)
+            HPDF_Page_SetFontAndSize(page, boldFont,
+                                     HPDF_Page_GetCurrentFontSize(page));
+          else
+            HPDF_Page_SetFontAndSize(page, font,
+                                     HPDF_Page_GetCurrentFontSize(page));
+        }
+      }
+      break;
+    case '#': // convert Headings
+      if (fullContent.size() > 0) {
+        if (fullContent.at(fullContent.size() - 1) != '\n') {
+          content += chr;
+          break;
+        }
+      }
       if (md.peek() == '#') {
         md.get();
         if (md.peek() == '#') {
@@ -102,56 +167,64 @@ int main(int argc, char **argv) {
               if (md.peek() == '#') {
                 md.get();
                 cPosY -= h6fontSize - HPDF_Page_GetCurrentFontSize(page);
-                HPDF_Page_SetFontAndSize(page, font, h6fontSize);
+                HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                         h6fontSize);
                 cPosX -= h6fontSize / 2.0;
               } else {
                 cPosY -= h5fontSize - HPDF_Page_GetCurrentFontSize(page);
-                HPDF_Page_SetFontAndSize(page, font, h5fontSize);
+                HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                         h5fontSize);
                 cPosX -= h5fontSize / 2.0;
               }
             } else {
               cPosY -= h4fontSize - HPDF_Page_GetCurrentFontSize(page);
-              HPDF_Page_SetFontAndSize(page, font, h4fontSize);
+              HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                       h4fontSize);
               cPosX -= h4fontSize / 2.0;
             }
           } else {
             cPosY -= h3fontSize - HPDF_Page_GetCurrentFontSize(page);
-            HPDF_Page_SetFontAndSize(page, font, h3fontSize);
+            HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                     h3fontSize);
             cPosX -= h3fontSize / 2.0;
           }
         } else {
           cPosY -= h2fontSize - HPDF_Page_GetCurrentFontSize(page);
-          HPDF_Page_SetFontAndSize(page, font, h2fontSize);
+          HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                   h2fontSize);
           cPosX -= h2fontSize / 2.0;
         }
       } else {
         cPosY -= h1fontSize - HPDF_Page_GetCurrentFontSize(page);
-        HPDF_Page_SetFontAndSize(page, font, h1fontSize);
+        HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                 h1fontSize);
         cPosX -= h1fontSize / 2.0;
       }
       break;
 
-    case ' ':
+    case ' ': // print content after new word
       content += chr;
       HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
       cPosX += HPDF_Page_TextWidth(page, content.c_str());
       content = "";
       break;
 
-    case '\n':
+    case '\n': // print content after new line
       while (md.peek() == '\n')
         md.get();
       HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
       cPosY -= linePadding + HPDF_Page_GetCurrentFontSize(page);
-      HPDF_Page_SetFontAndSize(page, font, fontSize);
+      HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page), fontSize);
       content = "";
       cPosX = pagePadding;
       break;
 
-    default:
+    default: // default = no special chars
       content += chr;
       break;
     }
+
+    fullContent += chr;
 
   } while (chr != EOF);
 
