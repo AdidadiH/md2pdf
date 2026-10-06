@@ -203,6 +203,11 @@ int main(int argc, char **argv) {
       break;
 
     case ' ': // print content after new word
+      if (cPosX + HPDF_Page_TextWidth(page, content.c_str()) >
+          width - 2 * pagePadding) {
+        cPosX = pagePadding + HPDF_Page_GetCurrentFontSize(page);
+        cPosY -= linePadding + HPDF_Page_GetCurrentFontSize(page);
+      }
       content += chr;
       HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
       cPosX += HPDF_Page_TextWidth(page, content.c_str());
