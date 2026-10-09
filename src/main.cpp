@@ -315,6 +315,12 @@ int main(int argc, char **argv) {
       break;
 
     case '\n': // print content after new line
+      if (cPosX + HPDF_Page_TextWidth(page, content.c_str()) >
+          width - 2 * pagePadding) {
+        cPosX = pagePadding + HPDF_Page_GetCurrentFontSize(page);
+        cPosY -= linePadding + HPDF_Page_GetCurrentFontSize(page);
+      }
+
       HPDF_Page_TextOut(page, cPosX, cPosY, content.c_str());
       if (md.peek() == '\n')
         cPosY -= HPDF_Page_GetCurrentFontSize(page);
