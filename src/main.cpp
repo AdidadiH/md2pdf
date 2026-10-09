@@ -110,12 +110,25 @@ int main(int argc, char **argv) {
         break;
 
       HPDF_Page_EndText(page);
+
       HPDF_Page_SetGrayStroke(page, 0);
       HPDF_Page_SetGrayFill(page, 0.0);
       HPDF_Page_Circle(page, cPosX,
                        cPosY + HPDF_Page_GetCurrentFontSize(page) / 4.0,
                        HPDF_Page_GetCurrentFontSize(page) / 5.0);
       HPDF_Page_Fill(page);
+
+      if (i != fullContent.size() - 1) {
+        HPDF_Page_SetGrayFill(page, 1.0);
+        HPDF_Page_Circle(page, cPosX,
+                         cPosY + HPDF_Page_GetCurrentFontSize(page) / 4.0,
+                         HPDF_Page_GetCurrentFontSize(page) / 5.0 -
+                             HPDF_Page_GetCurrentFontSize(page) / 20.0);
+        HPDF_Page_Fill(page);
+      }
+
+      HPDF_Page_SetGrayFill(page, 0.0);
+
       HPDF_Page_BeginText(page);
 
       cPosX += HPDF_Page_GetCurrentFontSize(page) / 5;
