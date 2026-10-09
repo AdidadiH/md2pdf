@@ -52,10 +52,10 @@ int main(int argc, char **argv) {
   int pagePadding = 50;
   int fontSize = 12;
   int h1fontSize = 48;
-  int h2fontSize = 36;
-  int h3fontSize = 28;
-  int h4fontSize = 24;
-  int h5fontSize = 20;
+  int h2fontSize = 26;
+  int h3fontSize = 22;
+  int h4fontSize = 20;
+  int h5fontSize = 18;
   int h6fontSize = 16;
   float linePadding = 3;
 
@@ -95,7 +95,32 @@ int main(int argc, char **argv) {
   do {
     chr = md.get();
 
+    std::size_t i = fullContent.size() - 1;
     switch (chr) {
+    case '-':
+      for (; !(i < 0 || fullContent.at(i) == '\n');
+           i--) { // check if first non space char in line
+
+        if (fullContent.at(i) != ' ') {
+          content += chr;
+          break;
+        }
+      }
+      if (fullContent.at(i) != '\n')
+        break;
+
+      HPDF_Page_EndText(page);
+      HPDF_Page_SetGrayStroke(page, 0);
+      HPDF_Page_SetGrayFill(page, 0.0);
+      HPDF_Page_Circle(page, cPosX,
+                       cPosY + HPDF_Page_GetCurrentFontSize(page) / 4.0,
+                       HPDF_Page_GetCurrentFontSize(page) / 5.0);
+      HPDF_Page_Fill(page);
+      HPDF_Page_BeginText(page);
+
+      cPosX += HPDF_Page_GetCurrentFontSize(page) / 5;
+
+      break;
     case '*': // set bold and italic
       if (md.peek() == '*') {
         md.get();
@@ -256,7 +281,6 @@ int main(int argc, char **argv) {
     }
 
     fullContent += chr;
-
   } while (chr != EOF);
 
   HPDF_Page_EndText(page);
