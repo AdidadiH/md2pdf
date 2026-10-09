@@ -109,19 +109,65 @@ int main(int argc, char **argv) {
       if (fullContent.at(i) != '\n')
         break;
 
+      while (md.peek() == ' ') {
+        md.get();
+      }
+
+      if (md.peek() == '#') { // set size for headings
+        md.get();
+        if (md.peek() == '#') {
+          md.get();
+          if (md.peek() == '#') {
+            md.get();
+            if (md.peek() == '#') {
+              md.get();
+              if (md.peek() == '#') {
+                md.get();
+                if (md.peek() == '#') {
+                  md.get();
+                  cPosY -= h6fontSize - HPDF_Page_GetCurrentFontSize(page);
+                  HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                           h6fontSize);
+                } else {
+                  cPosY -= h5fontSize - HPDF_Page_GetCurrentFontSize(page);
+                  HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                           h5fontSize);
+                }
+              } else {
+                cPosY -= h4fontSize - HPDF_Page_GetCurrentFontSize(page);
+                HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                         h4fontSize);
+              }
+            } else {
+              cPosY -= h3fontSize - HPDF_Page_GetCurrentFontSize(page);
+              HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                       h3fontSize);
+            }
+          } else {
+            cPosY -= h2fontSize - HPDF_Page_GetCurrentFontSize(page);
+            HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                     h2fontSize);
+          }
+        } else {
+          cPosY -= h1fontSize - HPDF_Page_GetCurrentFontSize(page);
+          HPDF_Page_SetFontAndSize(page, HPDF_Page_GetCurrentFont(page),
+                                   h1fontSize);
+        }
+      }
+
       HPDF_Page_EndText(page);
 
       HPDF_Page_SetGrayStroke(page, 0);
       HPDF_Page_SetGrayFill(page, 0.0);
       HPDF_Page_Circle(page, cPosX,
-                       cPosY + HPDF_Page_GetCurrentFontSize(page) / 4.0,
+                       cPosY + HPDF_Page_GetCurrentFontSize(page) / 3.0,
                        HPDF_Page_GetCurrentFontSize(page) / 5.0);
       HPDF_Page_Fill(page);
 
       if (i != fullContent.size() - 1) {
         HPDF_Page_SetGrayFill(page, 1.0);
         HPDF_Page_Circle(page, cPosX,
-                         cPosY + HPDF_Page_GetCurrentFontSize(page) / 4.0,
+                         cPosY + HPDF_Page_GetCurrentFontSize(page) / 3.0,
                          HPDF_Page_GetCurrentFontSize(page) / 5.0 -
                              HPDF_Page_GetCurrentFontSize(page) / 20.0);
         HPDF_Page_Fill(page);
@@ -131,6 +177,8 @@ int main(int argc, char **argv) {
 
       HPDF_Page_BeginText(page);
 
+      if (HPDF_Page_GetCurrentFontSize(page) != fontSize)
+        cPosX -= HPDF_Page_GetCurrentFontSize(page) / 4.0;
       cPosX += HPDF_Page_GetCurrentFontSize(page) / 5;
 
       break;
@@ -189,7 +237,9 @@ int main(int argc, char **argv) {
       break;
     case '#': // convert Headings
       if (fullContent.size() > 0) {
-        if (fullContent.at(fullContent.size() - 1) != '\n') {
+        if (!((fullContent.at(fullContent.size() - 1) == '\n' &&
+               fullContent.at(fullContent.size() - 1) == ' ')) &&
+            fullContent.at(fullContent.size() - 1) == '-') {
           content += chr;
           break;
         }
