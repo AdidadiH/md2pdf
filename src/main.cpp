@@ -178,8 +178,8 @@ int main(int argc, char **argv) {
       HPDF_Page_BeginText(page);
 
       if (HPDF_Page_GetCurrentFontSize(page) != fontSize)
-        cPosX -= HPDF_Page_GetCurrentFontSize(page) / 4.0;
-      cPosX += HPDF_Page_GetCurrentFontSize(page) / 5;
+        cPosX -= HPDF_Page_GetCurrentFontSize(page) / 5.0;
+      cPosX += HPDF_Page_GetCurrentFontSize(page) / 2.0;
 
       break;
     case '*': // set bold and italic
